@@ -9,6 +9,9 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 
+val isSnapshot: Boolean get() = System.getProperty("snapshot") != null
+version = "$version${if (isSnapshot) "-SNAPSHOT" else ""}"
+
 dependencies {
     api(libs.configcat)
     api(libs.openfeature)
