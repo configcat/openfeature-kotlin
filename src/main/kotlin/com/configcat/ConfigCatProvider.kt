@@ -55,8 +55,10 @@ class ConfigCatProvider(
         options.hooks.addOnConfigChanged {
             val sn = client.snapshot()
             snapshot.value = sn
-            if (!initialized.value && sn.cacheState != ClientCacheState.NO_FLAG_DATA) {
-                setInitialized()
+            if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
+                if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
+                    initialized.value = false
+                }
             }
         }
         client = ConfigCatClient(sdkKey, options)
@@ -66,8 +68,8 @@ class ConfigCatProvider(
         val initialUser = initialContext?.toConfigCatUser()
         user.value = initialUser
         val state = client.waitForReady()
-        if (!initialized.value && state != ClientCacheState.NO_FLAG_DATA) {
-            setInitialized()
+        if (state != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
+            events.emit(OpenFeatureProviderEvents.ProviderReady)
         }
     }
 
@@ -143,14 +145,6 @@ class ConfigCatProvider(
     }
 
     override fun observe(): Flow<OpenFeatureProviderEvents> = events
-
-    private fun setInitialized() {
-        if (initialized.compareAndSet(expect = false, update = true)) {
-            if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
-                initialized.value = false
-            }
-        }
-    }
 
     private inline fun <reified T> eval(
         key: String,
