@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.atomicfu)
-    alias(libs.plugins.detekt)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.maven.publish)
 }
