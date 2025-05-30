@@ -7,9 +7,13 @@ import dev.openfeature.sdk.ProviderEvaluation
 import dev.openfeature.sdk.ProviderMetadata
 import dev.openfeature.sdk.Reason
 import dev.openfeature.sdk.Value
+import dev.openfeature.sdk.events.OpenFeatureProviderEvents
 import dev.openfeature.sdk.exceptions.ErrorCode
+import kotlinx.atomicfu.AtomicBoolean
 import kotlinx.atomicfu.AtomicRef
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -28,7 +32,6 @@ import kotlinx.serialization.json.intOrNull
 import java.util.Date
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.div
 
 /**
  * Describes the ConfigCat OpenFeature provider.
@@ -42,14 +45,19 @@ class ConfigCatProvider(
     override var hooks: List<Hook<*>> = listOf()
     override val metadata: ProviderMetadata = ConfigCatProviderMetadata()
 
+    private val events = MutableSharedFlow<OpenFeatureProviderEvents>(replay = 1, extraBufferCapacity = 5)
     private val snapshot: AtomicRef<ConfigCatClientSnapshot?> = atomic(null)
     private val user: AtomicRef<ConfigCatUser?> = atomic(null)
+    private val initialized: AtomicBoolean = atomic(false)
     private val client: ConfigCatClient
 
     init {
         options.hooks.addOnConfigChanged {
             val sn = client.snapshot()
             snapshot.value = sn
+            if (!initialized.value && sn.cacheState != ClientCacheState.NO_FLAG_DATA) {
+                setInitialized()
+            }
         }
         client = ConfigCatClient(sdkKey, options)
     }
@@ -57,7 +65,10 @@ class ConfigCatProvider(
     override suspend fun initialize(initialContext: EvaluationContext?) {
         val initialUser = initialContext?.toConfigCatUser()
         user.value = initialUser
-        client.waitForReady()
+        val state = client.waitForReady()
+        if (!initialized.value && state != ClientCacheState.NO_FLAG_DATA) {
+            setInitialized()
+        }
     }
 
     override suspend fun onContextSet(
@@ -129,6 +140,16 @@ class ConfigCatProvider(
 
     override fun shutdown() {
         client.close()
+    }
+
+    override fun observe(): Flow<OpenFeatureProviderEvents> = events
+
+    private fun setInitialized() {
+        if (initialized.compareAndSet(expect = false, update = true)) {
+            if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
+                initialized.value = false
+            }
+        }
     }
 
     private inline fun <reified T> eval(

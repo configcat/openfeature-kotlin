@@ -10,9 +10,11 @@ class ClassPathResourceOverrideDataSource(name: String) : OverrideDataSource {
     private val settings: Map<String, Setting>
 
     init {
-        val content = this::class.java.classLoader!!.getResource(name)!!.readText()
+        val content = readResource(name)
         settings = json.decodeFromString<Config>(content).settings!!
     }
 
     override fun getOverrides(): Map<String, Setting> = settings
 }
+
+fun readResource(name: String): String = ClassPathResourceOverrideDataSource::class.java.classLoader!!.getResource(name)!!.readText()

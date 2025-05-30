@@ -10,9 +10,10 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.configcat)
-    implementation(libs.openfeature)
+    api(libs.configcat)
+    api(libs.openfeature)
     implementation(libs.atomicfu)
+    implementation(libs.coroutines)
     implementation(libs.serialization.json)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.coroutines.test)

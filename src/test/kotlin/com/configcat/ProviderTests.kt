@@ -3,16 +3,28 @@ package com.configcat
 import com.configcat.override.OverrideBehavior
 import com.configcat.override.OverrideDataSource
 import dev.openfeature.sdk.ImmutableContext
+import dev.openfeature.sdk.OpenFeatureAPI
 import dev.openfeature.sdk.Reason
 import dev.openfeature.sdk.Value
+import dev.openfeature.sdk.events.OpenFeatureProviderEvents
 import dev.openfeature.sdk.exceptions.ErrorCode
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockEngine.Companion.invoke
+import io.ktor.client.engine.mock.respond
+import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runTest
 import java.time.Instant
 import java.util.Date
+import kotlin.compareTo
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeSource
 
 class ProviderTests {
     @Test
@@ -164,4 +176,128 @@ class ProviderTests {
 
         provider.shutdown()
     }
+
+    @Test
+    fun testInitialize() =
+        runTest {
+            val mockEngine =
+                MockEngine {
+                    respond(
+                        content = readResource("test_json_complex.json"),
+                        status = HttpStatusCode.OK,
+                    )
+                }
+
+            val provider =
+                ConfigCatProvider(randomSdkKey()) {
+                    httpEngine = mockEngine
+                }
+
+            provider.initialize(null)
+
+            var ready = false
+            val collectJob =
+                launch {
+                    provider.observe().collect {
+                        if (it == OpenFeatureProviderEvents.ProviderReady) {
+                            ready = true
+                        }
+                    }
+                }
+
+            awaitUntil {
+                ready
+            }
+
+            val boolVal = provider.getBooleanEvaluation("enabledFeature", false, null)
+            assertTrue(boolVal.value)
+            assertEquals("v-enabled", boolVal.variant)
+            assertEquals(Reason.DEFAULT.name, boolVal.reason)
+
+            provider.shutdown()
+            collectJob.cancelAndJoin()
+        }
+
+    @Test
+    fun testReadyOnConfigChange() =
+        runTest {
+            val mockEngine =
+                MockEngine.create {
+                    this.addHandler {
+                        respond(
+                            content = "",
+                            status = HttpStatusCode.BadRequest,
+                        )
+                    }
+                    this.addHandler {
+                        respond(
+                            content = readResource("test_json_complex.json"),
+                            status = HttpStatusCode.OK,
+                        )
+                    }
+                }
+
+            val provider =
+                ConfigCatProvider(randomSdkKey()) {
+                    httpEngine = mockEngine
+                    pollingMode = autoPoll { pollingInterval = 1.seconds }
+                }
+
+            val ts = TimeSource.Monotonic
+            val start = ts.markNow()
+            provider.initialize(null)
+
+            var ready = false
+            val collectJob =
+                launch {
+                    provider.observe().collect {
+                        if (it == OpenFeatureProviderEvents.ProviderReady) {
+                            ready = true
+                        }
+                    }
+                }
+
+            awaitUntil {
+                ready
+            }
+
+            val elapsed = ts.markNow() - start
+            assertTrue { elapsed >= 1.seconds }
+
+            val boolVal = provider.getBooleanEvaluation("enabledFeature", false, null)
+            assertTrue(boolVal.value)
+            assertEquals("v-enabled", boolVal.variant)
+            assertEquals(Reason.DEFAULT.name, boolVal.reason)
+
+            provider.shutdown()
+            collectJob.cancelAndJoin()
+        }
+
+    @Test
+    fun testOpenFeatureAPI() =
+        runTest {
+            val mockEngine =
+                MockEngine {
+                    respond(
+                        content = readResource("test_json_complex.json"),
+                        status = HttpStatusCode.OK,
+                    )
+                }
+
+            val provider =
+                ConfigCatProvider(randomSdkKey()) {
+                    httpEngine = mockEngine
+                    pollingMode = autoPoll { pollingInterval = 1.seconds }
+                }
+
+            OpenFeatureAPI.setProviderAndWait(provider)
+            val client = OpenFeatureAPI.getClient()
+
+            val boolVal = client.getBooleanDetails("enabledFeature", false)
+            assertTrue(boolVal.value)
+            assertEquals("v-enabled", boolVal.variant)
+            assertEquals(Reason.DEFAULT.name, boolVal.reason)
+
+            OpenFeatureAPI.shutdown()
+        }
 }
