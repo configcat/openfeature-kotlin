@@ -23,8 +23,8 @@ the [ConfigCat Kotlin SDK](https://github.com/configcat/kotlin-sdk):
 ```kotlin
 // Configure the provider.
 val provider = ConfigCatProvider("<YOUR-CONFIGCAT-SDK-KEY>") {
-        pollingMode = autoPoll { pollingInterval = 60.seconds }
-    }
+    pollingMode = autoPoll { pollingInterval = 60.seconds }
+}
 
 // Configure the OpenFeature API with the ConfigCat provider.
 OpenFeatureAPI.setProviderAndWait(provider)
