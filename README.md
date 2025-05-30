@@ -21,7 +21,19 @@ argument containing the additional configuration options for
 the [ConfigCat Kotlin SDK](https://github.com/configcat/kotlin-sdk):
 
 ```kotlin
-// TODO
+// Configure the provider.
+val provider = ConfigCatProvider("<YOUR-CONFIGCAT-SDK-KEY>") {
+        pollingMode = autoPoll { pollingInterval = 60.seconds }
+    }
+
+// Configure the OpenFeature API with the ConfigCat provider.
+OpenFeatureAPI.setProviderAndWait(provider)
+
+// Create a client.
+val client = OpenFeatureAPI.getClient()
+
+// Evaluate feature flag.
+val isAwesomeFeatureEnabled = client.getBooleanDetails("isAwesomeFeatureEnabled", false)
 ```
 
 For more information about all the configuration options, see
