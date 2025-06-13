@@ -1,1 +1,1 @@
-Please check the [Github Releases](https://github.com/configcat/openfeature-ruby/releases) page for the changelog of the ConfigCat OpenFeature Provider for Ruby.
+Please check the [Github Releases](https://github.com/configcat/openfeature-kotlin/releases) page for the changelog of the ConfigCat OpenFeature Provider for Kotlin.

@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.1.10"
 android-gradle-plugin = "8.7.3"
-configcat = "4.2.0"
+configcat = "5.0.0"
 openfeature = "0.4.1"
 ktor = "3.0.0"
 kotlinx-serialization = "1.7.3"

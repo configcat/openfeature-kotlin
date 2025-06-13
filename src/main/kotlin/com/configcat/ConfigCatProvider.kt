@@ -49,11 +49,10 @@ class ConfigCatProvider(
     private val snapshot: AtomicRef<ConfigCatClientSnapshot?> = atomic(null)
     private val user: AtomicRef<ConfigCatUser?> = atomic(null)
     private val initialized: AtomicBoolean = atomic(false)
-    private val client: ConfigCatClient
+    val client: ConfigCatClient
 
     init {
-        options.hooks.addOnConfigChanged {
-            val sn = client.snapshot()
+        options.hooks.addOnConfigChanged { _, sn ->
             snapshot.value = sn
             if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
                 if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
