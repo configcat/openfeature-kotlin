@@ -21,6 +21,9 @@ argument containing the additional configuration options for
 the [ConfigCat Kotlin SDK](https://github.com/configcat/kotlin-sdk):
 
 ```kotlin
+import com.configcat.*
+import dev.openfeature.sdk.*
+
 coroutineScope.launch(Dispatchers.IO) {
     // Configure the provider.
     val provider = ConfigCatProvider("<YOUR-CONFIGCAT-SDK-KEY>") {
