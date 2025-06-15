@@ -37,7 +37,7 @@ coroutineScope.launch(Dispatchers.IO) {
     val client = OpenFeatureAPI.getClient()
 
     // Evaluate feature flag.
-    val isAwesomeFeatureEnabled = client.getBooleanDetails("isAwesomeFeatureEnabled", false)
+    val isAwesomeFeatureEnabled = client.getBooleanValue("isAwesomeFeatureEnabled", false)
 }
 ```
 
