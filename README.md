@@ -1,7 +1,7 @@
 # ConfigCat OpenFeature Provider for Kotlin
 
 [![CI](https://github.com/configcat/openfeature-kotlin/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/configcat/openfeature-kotlin/actions/workflows/ci.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/com.configcat/configcat-openfeature-provider?label=maven%20central)](https://search.maven.org/artifact/com.configcat/configcat-openfeature-provider/)
+[![Maven Central](https://img.shields.io/maven-central/v/com.configcat/configcat-openfeature-provider?label=maven%20central)](https://central.sonatype.com/artifact/com.configcat/configcat-openfeature-provider)
 
 This repository contains an OpenFeature provider that allows [ConfigCat](https://configcat.com) to be used with
 the [OpenFeature Kotlin SDK](https://github.com/open-feature/kotlin-sdk).
