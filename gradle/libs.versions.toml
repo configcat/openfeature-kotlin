@@ -1,14 +1,14 @@
 [versions]
 kotlin = "2.1.21"
-android-gradle-plugin = "8.10.1"
+android-gradle-plugin = "8.10.0"
 configcat = "5.1.0"
 openfeature = "0.6.2"
 ktor = "3.2.3"
-kotlinx-serialization = "1.9.0"
+kotlinx-serialization = "1.8.0"
 kotlinx-coroutines= "1.10.2"
 ktlint = "13.1.0"
 maven-publish = "0.34.0"
-atomicfu = "0.29.0"
+atomicfu = "0.27.0"
 dokka = "2.0.0"
 
 [libraries]
@@ -22,8 +22,8 @@ coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", ve
 ktor-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 [plugins]
-android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
 atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }

@@ -49,16 +49,20 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(libs.configcat)
-            api(libs.openfeature)
-            implementation(libs.atomicfu)
+            implementation(libs.configcat)
+            implementation(libs.openfeature)
             implementation(libs.coroutines)
             implementation(libs.serialization.json)
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.coroutines.test)
             implementation(libs.ktor.mock)
+        }
+
+        androidMain.dependencies {
+            implementation(libs.atomicfu)
         }
     }
 }
