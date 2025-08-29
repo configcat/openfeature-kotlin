@@ -1,19 +1,17 @@
 [versions]
-kotlin = "2.1.21"
-android-gradle-plugin = "8.10.0"
+kotlin = "2.2.10"
+android-gradle-plugin = "8.11.1"
 configcat = "5.1.0"
 openfeature = "0.6.2"
 ktor = "3.2.3"
-kotlinx-serialization = "1.8.0"
+kotlinx-serialization = "1.9.0"
 kotlinx-coroutines= "1.10.2"
 ktlint = "13.1.0"
 maven-publish = "0.34.0"
-atomicfu = "0.27.0"
 dokka = "2.0.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 configcat = { module = "com.configcat:configcat-kotlin-client", version.ref = "configcat" }
 openfeature = { module = "dev.openfeature:kotlin-sdk", version.ref = "openfeature" }
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -24,7 +22,6 @@ ktor-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "android-gradle-plugin" }
-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "atomicfu" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

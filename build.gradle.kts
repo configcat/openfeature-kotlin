@@ -3,9 +3,8 @@ import com.vanniktech.maven.publish.KotlinMultiplatform
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.atomicfu)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.dokka)
@@ -26,6 +25,7 @@ kotlin {
             }
         }
     }
+
     jvm {
         compilations.all {
             compileTaskProvider.configure {
@@ -35,9 +35,9 @@ kotlin {
             }
         }
     }
-    linuxX64 {}
+
     js {
-        nodejs {}
+        nodejs()
         browser {
             testTask {
                 useKarma {
@@ -46,6 +46,8 @@ kotlin {
             }
         }
     }
+
+    linuxX64()
 
     sourceSets {
         commonMain.dependencies {
@@ -61,15 +63,15 @@ kotlin {
             implementation(libs.ktor.mock)
         }
 
-        androidMain.dependencies {
-            implementation(libs.atomicfu)
+        all {
+            languageSettings.optIn("kotlin.concurrent.atomics.ExperimentalAtomicApi")
         }
     }
 }
 
 android {
     namespace = "com.configcat"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 21

@@ -9,9 +9,6 @@ import dev.openfeature.kotlin.sdk.Reason
 import dev.openfeature.kotlin.sdk.Value
 import dev.openfeature.kotlin.sdk.events.OpenFeatureProviderEvents
 import dev.openfeature.kotlin.sdk.exceptions.ErrorCode
-import kotlinx.atomicfu.AtomicBoolean
-import kotlinx.atomicfu.AtomicRef
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.json.Json
@@ -31,6 +28,8 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicReference
 
 /**
  * Describes the ConfigCat OpenFeature provider.
@@ -45,17 +44,17 @@ class ConfigCatProvider(
     override val metadata: ProviderMetadata = ConfigCatProviderMetadata()
 
     private val events = MutableSharedFlow<OpenFeatureProviderEvents>(replay = 1, extraBufferCapacity = 5)
-    private val snapshot: AtomicRef<ConfigCatClientSnapshot?> = atomic(null)
-    private val user: AtomicRef<ConfigCatUser?> = atomic(null)
-    private val initialized: AtomicBoolean = atomic(false)
+    private val snapshot = AtomicReference<ConfigCatClientSnapshot?>(null)
+    private val user = AtomicReference<ConfigCatUser?>(null)
+    private val initialized = AtomicBoolean(false)
     val client: ConfigCatClient
 
     init {
         options.hooks.addOnConfigChanged { _, sn ->
-            snapshot.value = sn
-            if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
+            snapshot.store(sn)
+            if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expectedValue = false, newValue = true)) {
                 if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
-                    initialized.value = false
+                    initialized.store(false)
                 }
             }
         }
@@ -64,9 +63,9 @@ class ConfigCatProvider(
 
     override suspend fun initialize(initialContext: EvaluationContext?) {
         val initialUser = initialContext?.toConfigCatUser()
-        user.value = initialUser
+        user.store(initialUser)
         val state = client.waitForReady()
-        if (state != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
+        if (state != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expectedValue = false, newValue = true)) {
             events.emit(OpenFeatureProviderEvents.ProviderReady)
         }
     }
@@ -76,7 +75,7 @@ class ConfigCatProvider(
         newContext: EvaluationContext,
     ) {
         val newUser = newContext.toConfigCatUser()
-        user.value = newUser
+        user.store(newUser)
     }
 
     override fun getBooleanEvaluation(
@@ -141,8 +140,8 @@ class ConfigCatProvider(
         defaultValue: T,
         context: EvaluationContext?,
     ): ProviderEvaluation<T> {
-        val snapshot = this.snapshot.value ?: client.snapshot()
-        val user = this.user.value ?: context?.toConfigCatUser()
+        val snapshot = this.snapshot.load() ?: client.snapshot()
+        val user = this.user.load() ?: context?.toConfigCatUser()
         val details = snapshot.getValueDetails(key, defaultValue, user)
         return details.toProviderEvaluation()
     }
