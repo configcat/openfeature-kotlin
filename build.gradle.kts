@@ -51,8 +51,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.configcat)
-            implementation(libs.openfeature)
+            api(libs.configcat)
+            api(libs.openfeature)
             implementation(libs.coroutines)
             implementation(libs.serialization.json)
         }

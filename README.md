@@ -22,7 +22,7 @@ the [ConfigCat Kotlin SDK](https://github.com/configcat/kotlin-sdk):
 
 ```kotlin
 import com.configcat.*
-import dev.openfeature.sdk.*
+import dev.openfeature.kotlin.sdk.*
 
 coroutineScope.launch(Dispatchers.IO) {
     // Configure the provider.

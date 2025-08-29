@@ -14,13 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.lifecycleScope
-import com.configcat.ConfigCatProvider
-import com.configcat.SharedPreferencesCache
+import com.configcat.*
 import com.configcat.log.LogLevel
 import com.example.configcat_openfeature_sample.ui.theme.ConfigcatopenfeaturesampleTheme
-import dev.openfeature.sdk.ImmutableContext
-import dev.openfeature.sdk.OpenFeatureAPI
-import dev.openfeature.sdk.Value
+import dev.openfeature.kotlin.sdk.*
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -38,7 +35,6 @@ class MainActivity : ComponentActivity() {
             }, initialContext = ImmutableContext(targetingKey = "configcat@example.com", attributes = mapOf(
                 "Email" to Value.String("configcat@example.com"),
             )))
-
         }
 
         enableEdgeToEdge()
