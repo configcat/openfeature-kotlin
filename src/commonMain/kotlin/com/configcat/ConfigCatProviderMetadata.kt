@@ -1,8 +1,8 @@
 package com.configcat
 
-import dev.openfeature.sdk.ProviderMetadata
+import dev.openfeature.kotlin.sdk.ProviderMetadata
 
 class ConfigCatProviderMetadata : ProviderMetadata {
-    override val name: String?
+    override val name: String
         get() = "ConfigCatProvider"
 }

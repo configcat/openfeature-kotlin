@@ -1,3 +1,12 @@
+package com.configcat
+
+import com.configcat.model.Config
+import com.configcat.model.Setting
+import com.configcat.override.OverrideDataSource
+import kotlinx.serialization.json.Json
+
+object TestData {
+    val complexJson = """
 {
     "p": {
         "u": "https://cdn-global.configcat.com",
@@ -66,4 +75,14 @@
             }
         }
     }
+}
+    """
+}
+
+class TestOverrideDataSource : OverrideDataSource {
+    private val json: Json = Json { ignoreUnknownKeys = true }
+    private val settings: Map<String, Setting> =
+        json.decodeFromString<Config>(TestData.complexJson).settings!!
+
+    override fun getOverrides(): Map<String, Setting> = settings
 }

@@ -2,28 +2,25 @@ package com.configcat
 
 import com.configcat.override.OverrideBehavior
 import com.configcat.override.OverrideDataSource
-import dev.openfeature.sdk.ImmutableContext
-import dev.openfeature.sdk.OpenFeatureAPI
-import dev.openfeature.sdk.Reason
-import dev.openfeature.sdk.Value
-import dev.openfeature.sdk.events.OpenFeatureProviderEvents
-import dev.openfeature.sdk.exceptions.ErrorCode
+import dev.openfeature.kotlin.sdk.ImmutableContext
+import dev.openfeature.kotlin.sdk.OpenFeatureAPI
+import dev.openfeature.kotlin.sdk.Reason
+import dev.openfeature.kotlin.sdk.Value
+import dev.openfeature.kotlin.sdk.events.OpenFeatureProviderEvents
+import dev.openfeature.kotlin.sdk.exceptions.ErrorCode
 import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.MockEngine.Companion.invoke
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import java.time.Instant
-import java.util.Date
-import kotlin.compareTo
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 
 class ProviderTests {
@@ -60,7 +57,7 @@ class ProviderTests {
             ConfigCatProvider("localhost") {
                 flagOverrides = {
                     behavior = OverrideBehavior.LOCAL_ONLY
-                    dataSource = ClassPathResourceOverrideDataSource("test_json_complex.json")
+                    dataSource = TestOverrideDataSource()
                 }
             }
 
@@ -85,16 +82,29 @@ class ProviderTests {
         assertEquals(Reason.DEFAULT.name, stringVal.reason)
 
         val objVal = provider.getObjectEvaluation("objectSetting", Value.Null, null)
-        assertTrue(objVal.value.asStructure()!!.getValue("bool_field").asBoolean()!!)
-        assertEquals("value", objVal.value.asStructure()!!.getValue("text_field").asString()!!)
+        assertTrue(
+            objVal.value
+                .asStructure()!!
+                .getValue("bool_field")
+                .asBoolean()!!,
+        )
+        assertEquals(
+            "value",
+            objVal.value
+                .asStructure()!!
+                .getValue("text_field")
+                .asString()!!,
+        )
         assertEquals("v-object", objVal.variant)
         assertEquals(Reason.DEFAULT.name, objVal.reason)
 
         provider.shutdown()
     }
 
+    @OptIn(ExperimentalTime::class)
     @Test
     fun testUser() {
+        val time = kotlin.time.Instant.parse("2025-05-30T10:15:30.00Z")
         val ctxCustom =
             ImmutableContext(
                 targetingKey = "example@matching.com",
@@ -105,7 +115,7 @@ class ProviderTests {
                         "custom3" to Value.Integer(5),
                         "custom4" to Value.Double(1.2),
                         "custom5" to Value.List(listOf(Value.Integer(1), Value.Integer(2))),
-                        "custom6" to Value.Date(Date.from(Instant.parse("2025-05-30T10:15:30.00Z"))),
+                        "custom6" to Value.Instant(time),
                     ),
             )
 
@@ -116,7 +126,7 @@ class ProviderTests {
         assertEquals(5, user.attributeFor("custom3"))
         assertEquals(1.2, user.attributeFor("custom4"))
         assertEquals(listOf(1, 2), user.attributeFor("custom5"))
-        assertEquals(1748600130L, user.attributeFor("custom6"))
+        assertEquals(time, user.attributeFor("custom6"))
     }
 
     @Test
@@ -125,7 +135,7 @@ class ProviderTests {
             ConfigCatProvider("localhost") {
                 flagOverrides = {
                     behavior = OverrideBehavior.LOCAL_ONLY
-                    dataSource = ClassPathResourceOverrideDataSource("test_json_complex.json")
+                    dataSource = TestOverrideDataSource()
                 }
             }
 
@@ -159,7 +169,7 @@ class ProviderTests {
             ConfigCatProvider("localhost") {
                 flagOverrides = {
                     behavior = OverrideBehavior.LOCAL_ONLY
-                    dataSource = ClassPathResourceOverrideDataSource("test_json_complex.json")
+                    dataSource = TestOverrideDataSource()
                 }
             }
 
@@ -183,7 +193,7 @@ class ProviderTests {
             val mockEngine =
                 MockEngine {
                     respond(
-                        content = readResource("test_json_complex.json"),
+                        content = TestData.complexJson,
                         status = HttpStatusCode.OK,
                     )
                 }
@@ -231,7 +241,7 @@ class ProviderTests {
                     }
                     this.addHandler {
                         respond(
-                            content = readResource("test_json_complex.json"),
+                            content = TestData.complexJson,
                             status = HttpStatusCode.OK,
                         )
                     }
@@ -279,7 +289,7 @@ class ProviderTests {
             val mockEngine =
                 MockEngine {
                     respond(
-                        content = readResource("test_json_complex.json"),
+                        content = TestData.complexJson,
                         status = HttpStatusCode.OK,
                     )
                 }

@@ -1,17 +1,14 @@
 package com.configcat
 
-import dev.openfeature.sdk.EvaluationContext
-import dev.openfeature.sdk.FeatureProvider
-import dev.openfeature.sdk.Hook
-import dev.openfeature.sdk.ProviderEvaluation
-import dev.openfeature.sdk.ProviderMetadata
-import dev.openfeature.sdk.Reason
-import dev.openfeature.sdk.Value
-import dev.openfeature.sdk.events.OpenFeatureProviderEvents
-import dev.openfeature.sdk.exceptions.ErrorCode
-import kotlinx.atomicfu.AtomicBoolean
-import kotlinx.atomicfu.AtomicRef
-import kotlinx.atomicfu.atomic
+import dev.openfeature.kotlin.sdk.EvaluationContext
+import dev.openfeature.kotlin.sdk.FeatureProvider
+import dev.openfeature.kotlin.sdk.Hook
+import dev.openfeature.kotlin.sdk.ProviderEvaluation
+import dev.openfeature.kotlin.sdk.ProviderMetadata
+import dev.openfeature.kotlin.sdk.Reason
+import dev.openfeature.kotlin.sdk.Value
+import dev.openfeature.kotlin.sdk.events.OpenFeatureProviderEvents
+import dev.openfeature.kotlin.sdk.exceptions.ErrorCode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.serialization.json.Json
@@ -29,9 +26,10 @@ import kotlinx.serialization.json.float
 import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
-import java.util.Date
 import kotlin.collections.component1
 import kotlin.collections.component2
+import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicReference
 
 /**
  * Describes the ConfigCat OpenFeature provider.
@@ -46,17 +44,17 @@ class ConfigCatProvider(
     override val metadata: ProviderMetadata = ConfigCatProviderMetadata()
 
     private val events = MutableSharedFlow<OpenFeatureProviderEvents>(replay = 1, extraBufferCapacity = 5)
-    private val snapshot: AtomicRef<ConfigCatClientSnapshot?> = atomic(null)
-    private val user: AtomicRef<ConfigCatUser?> = atomic(null)
-    private val initialized: AtomicBoolean = atomic(false)
+    private val snapshot = AtomicReference<ConfigCatClientSnapshot?>(null)
+    private val user = AtomicReference<ConfigCatUser?>(null)
+    private val initialized = AtomicBoolean(false)
     val client: ConfigCatClient
 
     init {
         options.hooks.addOnConfigChanged { _, sn ->
-            snapshot.value = sn
-            if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
+            snapshot.store(sn)
+            if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expectedValue = false, newValue = true)) {
                 if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
-                    initialized.value = false
+                    initialized.store(false)
                 }
             }
         }
@@ -65,9 +63,9 @@ class ConfigCatProvider(
 
     override suspend fun initialize(initialContext: EvaluationContext?) {
         val initialUser = initialContext?.toConfigCatUser()
-        user.value = initialUser
+        user.store(initialUser)
         val state = client.waitForReady()
-        if (state != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expect = false, update = true)) {
+        if (state != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expectedValue = false, newValue = true)) {
             events.emit(OpenFeatureProviderEvents.ProviderReady)
         }
     }
@@ -77,40 +75,32 @@ class ConfigCatProvider(
         newContext: EvaluationContext,
     ) {
         val newUser = newContext.toConfigCatUser()
-        user.value = newUser
+        user.store(newUser)
     }
 
     override fun getBooleanEvaluation(
         key: String,
         defaultValue: Boolean,
         context: EvaluationContext?,
-    ): ProviderEvaluation<Boolean> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<Boolean> = eval(key, defaultValue, context)
 
     override fun getDoubleEvaluation(
         key: String,
         defaultValue: Double,
         context: EvaluationContext?,
-    ): ProviderEvaluation<Double> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<Double> = eval(key, defaultValue, context)
 
     override fun getIntegerEvaluation(
         key: String,
         defaultValue: Int,
         context: EvaluationContext?,
-    ): ProviderEvaluation<Int> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<Int> = eval(key, defaultValue, context)
 
     override fun getStringEvaluation(
         key: String,
         defaultValue: String,
         context: EvaluationContext?,
-    ): ProviderEvaluation<String> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<String> = eval(key, defaultValue, context)
 
     override fun getObjectEvaluation(
         key: String,
@@ -150,8 +140,8 @@ class ConfigCatProvider(
         defaultValue: T,
         context: EvaluationContext?,
     ): ProviderEvaluation<T> {
-        val snapshot = this.snapshot.value ?: client.snapshot()
-        val user = this.user.value ?: context?.toConfigCatUser()
+        val snapshot = this.snapshot.load() ?: client.snapshot()
+        val user = this.user.load() ?: context?.toConfigCatUser()
         val details = snapshot.getValueDetails(key, defaultValue, user)
         return details.toProviderEvaluation()
     }
@@ -215,18 +205,10 @@ class ConfigCatProvider(
         }
 }
 
-internal fun EvaluationContext.toConfigCatUser(): ConfigCatUser {
-    return ConfigCatUser(
+internal fun EvaluationContext.toConfigCatUser(): ConfigCatUser =
+    ConfigCatUser(
         identifier = this.getTargetingKey(),
         email = this.getValue("Email")?.asString(),
         country = this.getValue("Country")?.asString(),
-        custom =
-            this.asObjectMap().filter { (_, v) -> v != null }.mapValues {
-                val v = it.value
-                if (v is Date) {
-                    return@mapValues v.time / 1000
-                }
-                v as Any
-            },
+        custom = this.asObjectMap().filter { (_, v) -> v != null }.mapValues { it.value as Any },
     )
-}
