@@ -1,14 +1,14 @@
 package com.configcat
 
-import dev.openfeature.sdk.EvaluationContext
-import dev.openfeature.sdk.FeatureProvider
-import dev.openfeature.sdk.Hook
-import dev.openfeature.sdk.ProviderEvaluation
-import dev.openfeature.sdk.ProviderMetadata
-import dev.openfeature.sdk.Reason
-import dev.openfeature.sdk.Value
-import dev.openfeature.sdk.events.OpenFeatureProviderEvents
-import dev.openfeature.sdk.exceptions.ErrorCode
+import dev.openfeature.kotlin.sdk.EvaluationContext
+import dev.openfeature.kotlin.sdk.FeatureProvider
+import dev.openfeature.kotlin.sdk.Hook
+import dev.openfeature.kotlin.sdk.ProviderEvaluation
+import dev.openfeature.kotlin.sdk.ProviderMetadata
+import dev.openfeature.kotlin.sdk.Reason
+import dev.openfeature.kotlin.sdk.Value
+import dev.openfeature.kotlin.sdk.events.OpenFeatureProviderEvents
+import dev.openfeature.kotlin.sdk.exceptions.ErrorCode
 import kotlinx.atomicfu.AtomicBoolean
 import kotlinx.atomicfu.AtomicRef
 import kotlinx.atomicfu.atomic
@@ -29,7 +29,6 @@ import kotlinx.serialization.json.float
 import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
-import java.util.Date
 import kotlin.collections.component1
 import kotlin.collections.component2
 
@@ -84,33 +83,25 @@ class ConfigCatProvider(
         key: String,
         defaultValue: Boolean,
         context: EvaluationContext?,
-    ): ProviderEvaluation<Boolean> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<Boolean> = eval(key, defaultValue, context)
 
     override fun getDoubleEvaluation(
         key: String,
         defaultValue: Double,
         context: EvaluationContext?,
-    ): ProviderEvaluation<Double> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<Double> = eval(key, defaultValue, context)
 
     override fun getIntegerEvaluation(
         key: String,
         defaultValue: Int,
         context: EvaluationContext?,
-    ): ProviderEvaluation<Int> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<Int> = eval(key, defaultValue, context)
 
     override fun getStringEvaluation(
         key: String,
         defaultValue: String,
         context: EvaluationContext?,
-    ): ProviderEvaluation<String> {
-        return eval(key, defaultValue, context)
-    }
+    ): ProviderEvaluation<String> = eval(key, defaultValue, context)
 
     override fun getObjectEvaluation(
         key: String,
@@ -215,18 +206,10 @@ class ConfigCatProvider(
         }
 }
 
-internal fun EvaluationContext.toConfigCatUser(): ConfigCatUser {
-    return ConfigCatUser(
+internal fun EvaluationContext.toConfigCatUser(): ConfigCatUser =
+    ConfigCatUser(
         identifier = this.getTargetingKey(),
         email = this.getValue("Email")?.asString(),
         country = this.getValue("Country")?.asString(),
-        custom =
-            this.asObjectMap().filter { (_, v) -> v != null }.mapValues {
-                val v = it.value
-                if (v is Date) {
-                    return@mapValues v.time / 1000
-                }
-                v as Any
-            },
+        custom = this.asObjectMap().filter { (_, v) -> v != null }.mapValues { it.value as Any },
     )
-}

@@ -2,13 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [ '*' ]
-    tags: [ '[0-9]+.[0-9]+.[0-9]+' ]
-    paths-ignore:
-      - '**.md'
-      - 'samples/**'
-  pull_request:
     branches: [ main ]
+    tags: [ '[0-9]+.[0-9]+.[0-9]+' ]
     paths-ignore:
       - '**.md'
       - 'samples/**'
