@@ -48,6 +48,8 @@ kotlin {
     }
 
     linuxX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
@@ -70,7 +72,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.configcat"
+    namespace = "com.configcat.openfeature"
     compileSdk = 36
 
     defaultConfig {

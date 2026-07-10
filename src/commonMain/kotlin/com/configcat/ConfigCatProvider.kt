@@ -53,7 +53,7 @@ class ConfigCatProvider(
         options.hooks.addOnConfigChanged { _, sn ->
             snapshot.store(sn)
             if (sn.cacheState != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expectedValue = false, newValue = true)) {
-                if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady)) {
+                if (!events.tryEmit(OpenFeatureProviderEvents.ProviderReady())) {
                     initialized.store(false)
                 }
             }
@@ -66,7 +66,7 @@ class ConfigCatProvider(
         user.store(initialUser)
         val state = client.waitForReady()
         if (state != ClientCacheState.NO_FLAG_DATA && initialized.compareAndSet(expectedValue = false, newValue = true)) {
-            events.emit(OpenFeatureProviderEvents.ProviderReady)
+            events.emit(OpenFeatureProviderEvents.ProviderReady())
         }
     }
 

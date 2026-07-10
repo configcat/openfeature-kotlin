@@ -209,7 +209,7 @@ class ProviderTests {
             val collectJob =
                 launch {
                     provider.observe().collect {
-                        if (it == OpenFeatureProviderEvents.ProviderReady) {
+                        if (it == OpenFeatureProviderEvents.ProviderReady()) {
                             ready = true
                         }
                     }
@@ -261,7 +261,7 @@ class ProviderTests {
             val collectJob =
                 launch {
                     provider.observe().collect {
-                        if (it == OpenFeatureProviderEvents.ProviderReady) {
+                        if (it == OpenFeatureProviderEvents.ProviderReady()) {
                             ready = true
                         }
                     }
