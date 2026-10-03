@@ -71,6 +71,11 @@ class ProviderTests {
         assertEquals("v-int", intVal.variant)
         assertEquals(Reason.DEFAULT.name, intVal.reason)
 
+        val longVal = provider.getLongEvaluation("intSetting", 0L, null)
+        assertEquals(5L, longVal.value)
+        assertEquals("v-int", longVal.variant)
+        assertEquals(Reason.DEFAULT.name, longVal.reason)
+
         val doubleVal = provider.getDoubleEvaluation("doubleSetting", 0.0, null)
         assertEquals(1.2, doubleVal.value)
         assertEquals("v-double", doubleVal.variant)
@@ -94,6 +99,13 @@ class ProviderTests {
                 .asStructure()!!
                 .getValue("text_field")
                 .asString()!!,
+        )
+        assertEquals(
+            Long.MAX_VALUE,
+            objVal.value
+                .asStructure()!!
+                .getValue("long_field")
+                .asLong()!!,
         )
         assertEquals("v-object", objVal.variant)
         assertEquals(Reason.DEFAULT.name, objVal.reason)
@@ -178,6 +190,16 @@ class ProviderTests {
         assertEquals(ErrorCode.FLAG_NOT_FOUND, boolVal.errorCode)
         assertEquals(Reason.ERROR.name, boolVal.reason)
         assertContains(boolVal.errorMessage!!, "Failed to evaluate setting 'non-existing' (the key was not found in config JSON)")
+
+        val longVal = provider.getLongEvaluation("non-existing", 42L, null)
+        assertEquals(42L, longVal.value)
+        assertEquals(ErrorCode.FLAG_NOT_FOUND, longVal.errorCode)
+        assertEquals(Reason.ERROR.name, longVal.reason)
+
+        val longMismatchResult = provider.getLongEvaluation("stringSetting", 42L, null)
+        assertEquals(42L, longMismatchResult.value)
+        assertEquals(ErrorCode.TYPE_MISMATCH, longMismatchResult.errorCode)
+        assertEquals(Reason.ERROR.name, longMismatchResult.reason)
 
         val mismatchResult = provider.getBooleanEvaluation("stringSetting", false, null)
         assertFalse(mismatchResult.value)
