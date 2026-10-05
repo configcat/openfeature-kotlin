@@ -71,7 +71,7 @@ object TestData {
             "t": 1,
             "i": "v-object",
             "v": {
-                "s": "{ \"bool_field\": true, \"text_field\": \"value\" }"
+                "s": "{ \"bool_field\": true, \"text_field\": \"value\", \"long_field\": 9223372036854775807 }"
             }
         }
     }

@@ -26,6 +26,8 @@ import kotlinx.serialization.json.float
 import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.long
+import kotlinx.serialization.json.longOrNull
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -95,6 +97,15 @@ class ConfigCatProvider(
         defaultValue: Int,
         context: EvaluationContext?,
     ): ProviderEvaluation<Int> = eval(key, defaultValue, context)
+
+    override fun getLongEvaluation(
+        key: String,
+        defaultValue: Long,
+        context: EvaluationContext?,
+    ): ProviderEvaluation<Long> {
+        val intResult = eval(key, 0, context)
+        return intResult.withValue(if (intResult.errorCode == null) intResult.value.toLong() else defaultValue)
+    }
 
     override fun getStringEvaluation(
         key: String,
@@ -199,6 +210,7 @@ class ConfigCatProvider(
             this.isString -> Value.String(this.contentOrNull ?: "")
             this.booleanOrNull != null -> Value.Boolean(this.boolean)
             this.intOrNull != null -> Value.Integer(this.int)
+            this.longOrNull != null -> Value.Long(this.long)
             this.floatOrNull != null -> Value.Double(this.float.toDouble())
             this.doubleOrNull != null -> Value.Double(this.double)
             else -> Value.Null
